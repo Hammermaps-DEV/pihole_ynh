@@ -26,38 +26,13 @@ app=${YNH_APP_INSTANCE_NAME:-$YNH_APP_ID}
 # If the form has a value for a variable, take the value from the form,
 # Otherwise, keep the value from the app config.
 
-# Overwrite setupVars.conf file
-old_overwrite_setupvars="$(ynh_app_setting_get $app overwrite_setupvars)"
-old_overwrite_setupvars=$(bool_to_true_false $old_overwrite_setupvars)
-overwrite_setupvars="${YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_SETUPVARS:-$old_overwrite_setupvars}"
-
-# Overwrite pihole-FTL.conf file
-old_overwrite_ftl="$(ynh_app_setting_get $app overwrite_ftl)"
-old_overwrite_ftl=$(bool_to_true_false $old_overwrite_ftl)
-overwrite_ftl="${YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_FTL:-$old_overwrite_ftl}"
-
-# Overwrite nginx configuration
-old_overwrite_nginx="$(ynh_app_setting_get $app overwrite_nginx)"
-old_overwrite_nginx=$(bool_to_true_false $old_overwrite_nginx)
-overwrite_nginx="${YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_NGINX:-$old_overwrite_nginx}"
-
-# Overwrite php-fpm configuration
-old_overwrite_phpfpm="$(ynh_app_setting_get $app overwrite_phpfpm)"
-old_overwrite_phpfpm=$(bool_to_true_false $old_overwrite_phpfpm)
-overwrite_phpfpm="${YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_PHPFPM:-$old_overwrite_phpfpm}"
-
 #=================================================
 # SHOW_CONFIG FUNCTION FOR 'SHOW' COMMAND
 #=================================================
 
 show_config() {
 	# here you are supposed to read some config file/database/other then print the values
-	# echo "YNH_CONFIG_${PANEL_ID}_${SECTION_ID}_${OPTION_ID}=value"
-
-	echo "YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_SETUPVARS=$overwrite_setupvars"
-	echo "YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_FTL=$overwrite_ftl"
-	echo "YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_NGINX=$overwrite_nginx"
-	echo "YNH_CONFIG_MAIN_OVERWRITE_FILES_OVERWRITE_PHPFPM=$overwrite_phpfpm"
+	# ynh_return "YNH_CONFIG_${PANEL_ID}_${SECTION_ID}_${OPTION_ID}=value"
 }
 
 #=================================================
@@ -65,18 +40,6 @@ show_config() {
 #=================================================
 
 apply_config() {
-	# Set overwrite_setupvars
-	overwrite_setupvars=$(bool_to_01 $overwrite_setupvars)
-	ynh_app_setting_set $app overwrite_setupvars "$overwrite_setupvars"
-	# Set overwrite_ftl
-	overwrite_ftl=$(bool_to_01 $overwrite_ftl)
-	ynh_app_setting_set $app overwrite_ftl "$overwrite_ftl"
-	# Set overwrite_nginx
-	overwrite_nginx=$(bool_to_01 $overwrite_nginx)
-	ynh_app_setting_set $app overwrite_nginx "$overwrite_nginx"
-	# Set overwrite_phpfpm
-	overwrite_phpfpm=$(bool_to_01 $overwrite_phpfpm)
-	ynh_app_setting_set $app overwrite_phpfpm "$overwrite_phpfpm"
 }
 
 #=================================================

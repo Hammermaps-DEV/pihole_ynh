@@ -16,9 +16,9 @@ do_pre_regen() {
 	test -e "/etc/dnsmasq.d/03-pihole-wildcard.conf" && cp -a "/etc/dnsmasq.d/03-pihole-wildcard.conf" "$temp_dir"
 
 	# Décommente le cache-size de la config par défaut
-	sed --in-place "s/^#pihole# cache-size=/cache-size=/g" /etc/dnsmasq.conf
+	#sed --in-place "s/^#pihole# cache-size=/cache-size=/g" /etc/dnsmasq.conf
 	# Et commente celui de pi-hole
-	sed --in-place "s/^cache-size=/#cache-size=/g" /etc/dnsmasq.d/01-pihole.conf
+	#sed --in-place "s/^cache-size=/#cache-size=/g" /etc/dnsmasq.d/01-pihole.conf
   fi
 }
 
@@ -31,7 +31,7 @@ do_post_regen() {
   test -n $temp_dir && rm -r $temp_dir
 
   # Commente le cache-size de la config par défaut
-  sed --in-place "s/^cache-size=/#pihole# cache-size=/g" /etc/dnsmasq.conf
+  #sed --in-place "s/^cache-size=/#pihole# cache-size=/g" /etc/dnsmasq.conf
 
   # Reload dnsmasq
   systemctl reload dnsmasq

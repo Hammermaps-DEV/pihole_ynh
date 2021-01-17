@@ -14,7 +14,6 @@ source /usr/share/yunohost/helpers
 #=================================================
 
 app=${YNH_APP_INSTANCE_NAME:-$YNH_APP_ID}
-query_logging=$(ynh_app_setting_get $app query_logging)
 
 #=================================================
 # SORT OUT THE CONFIG FILE TO HANDLE
@@ -47,12 +46,7 @@ then
 	echo "IPV6_ADDRESS=" >> "$config_file"
 	echo "PIHOLE_DNS_1=" >> "$config_file"
 	echo "PIHOLE_DNS_2=" >> "$config_file"
-	if [ $query_logging -eq 1 ]; then
-		query_logging=true
-	else
-		query_logging=false
-	fi
-	echo "QUERY_LOGGING=$query_logging" >> "$config_file"
+	echo "QUERY_LOGGING=true" >> "$config_file"
 	echo "INSTALL_WEB=true" >> "$config_file"
 
 elif [ "$file" = "pihole-FTL.conf" ]

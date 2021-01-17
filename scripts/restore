@@ -81,13 +81,6 @@ chown $app: -R "/etc/pihole"
 chown root: -R "/etc/pihole/logrotate"
 
 #=================================================
-# RESTORE OF THE PHP-FPM CONFIGURATION
-#=================================================
-
-ynh_restore_file "/etc/php5/fpm/pool.d/$app.conf"
-ynh_restore_file "/etc/php5/fpm/conf.d/20-$app.ini"
-
-#=================================================
 # SPECIFIC RESTORE
 #=================================================
 # REINSTALL DEPENDENCIES
@@ -137,12 +130,6 @@ ynh_restore_file "/usr/share/yunohost/hooks/conf_regen/50-dnsmasq_$app"
 ynh_system_reload --service_name=dnsmasq --action=stop
 
 ynh_restore_file "/etc/dnsmasq.d/01-pihole.conf"
-test -e "${YNH_APP_BACKUP_DIR}/etc/dnsmasq.d/02-pihole-dhcp.conf" && \
-	ynh_restore_file "/etc/dnsmasq.d/02-pihole-dhcp.conf"
-test -e "${YNH_APP_BACKUP_DIR}/etc/dnsmasq.d/03-pihole-wildcard.conf" && \
-	ynh_restore_file "/etc/dnsmasq.d/03-pihole-wildcard.conf"
-test -e "${YNH_APP_BACKUP_DIR}/etc/dnsmasq.d/04-pihole-static-dhcp.conf" && \
-	ynh_restore_file "/etc/dnsmasq.d/04-pihole-static-dhcp.conf"
 
 # Pour éviter un conflit entre les config de dnsmasq, il faut commenter cache-size dans la config par défaut.
 ynh_replace_string "^cache-size=" "#pihole# cache-size=" /etc/dnsmasq.conf
@@ -195,10 +182,9 @@ ynh_system_reload --service_name=pihole-FTL --action=restart
 #=================================================
 # GENERIC FINALISATION
 #=================================================
-# RELOAD NGINX AND PHP-FPM
+# RELOAD NGINX
 #=================================================
 
-ynh_system_reload --service_name=php5-fpm
 ynh_system_reload --service_name=nginx
 
 #=================================================

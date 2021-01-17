@@ -20,13 +20,8 @@ app=$YNH_APP_INSTANCE_NAME
 domain=$(ynh_app_setting_get $app domain)
 path_url=$(ynh_app_setting_get $app path)
 admin=$(ynh_app_setting_get $app admin)
-query_logging=$(ynh_app_setting_get $app query_logging)
 final_path=$(ynh_app_setting_get $app final_path)
 port=$(ynh_app_setting_get $app port)
-overwrite_setupvars=$(ynh_app_setting_get $app overwrite_setupvars)
-overwrite_ftl=$(ynh_app_setting_get $app overwrite_ftl)
-overwrite_nginx=$(ynh_app_setting_get $app overwrite_nginx)
-overwrite_phpfpm=$(ynh_app_setting_get $app overwrite_phpfpm)
 
 #=================================================
 # CHECK VERSION
@@ -125,16 +120,6 @@ fi
 ynh_system_user_create $app	# Create the dedicated user, if not exist
 
 #=================================================
-# PHP-FPM CONFIGURATION
-#=================================================
-
-# Overwrite the php-fpm configuration only if it's allowed
-if [ $overwrite_phpfpm -eq 1 ]
-then
-	ynh_add_fpm_config	# Créer le fichier de configuration du pool php-fpm et le configure.
-fi
-
-#=================================================
 # SPECIFIC UPGRADE
 #=================================================
 # UPDATE PI-HOLE SCRIPTS
@@ -222,15 +207,10 @@ then
 	echo "IPV6_ADDRESS=" >> $setupVars
 	echo "PIHOLE_DNS_1=" >> $setupVars
 	echo "PIHOLE_DNS_2=" >> $setupVars
-	if [ $query_logging -eq 1 ]; then
-		query_logging=true
-	else
-		query_logging=false
-	fi
-	echo "QUERY_LOGGING=$query_logging" >> $setupVars
+	echo "QUERY_LOGGING=true" >> $setupVars
 	echo "INSTALL_WEB=true" >> $setupVars
 
-	ynh_store_file_checksum "$setupVars"	# Enregistre la somme de contrôle du fichier de config
+	ynh_store_file_checksum "$setupVars"
 fi
 
 #=================================================

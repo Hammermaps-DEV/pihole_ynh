@@ -1,5 +1,9 @@
 #!/bin/bash
 
+YNH_PHP_VERSION="7.3"
+
+extra_php_dependencies="php${YNH_PHP_VERSION}-sqlite3"
+
 #=================================================
 # BACKUP
 #=================================================
@@ -20,32 +24,6 @@ CHECK_SIZE () {	# Vérifie avant chaque backup que l'espace est suffisant
 		ynh_print_err "Espace disponible: $(HUMAN_SIZE $free_space)"
 		ynh_die "Espace nécessaire: $(HUMAN_SIZE $backup_size)"
 	fi
-}
-
-#=================================================
-# PACKAGE CHECK BYPASSING...
-#=================================================
-
-IS_PACKAGE_CHECK () {
-	return $(env | grep -c container=lxc)
-}
-
-#=================================================
-# BOOLEAN CONVERTER
-#=================================================
-
-bool_to_01 () {
-	local var="$1"
-	[ "$var" = "true" ] && var=1
-	[ "$var" = "false" ] && var=0
-	echo "$var"
-}
-
-bool_to_true_false () {
-	local var="$1"
-	[ "$var" = "1" ] && var=true
-	[ "$var" = "0" ] && var=false
-	echo "$var"
 }
 
 #=================================================
@@ -316,353 +294,31 @@ ynh_clean_check_starting () {
 
 #=================================================
 
-ynh_print_log () {
-  echo "${1}"
-}
-
-# Print an info on stdout
-#
-# usage: ynh_print_info "Text to print"
-# | arg: text - The text to print
-ynh_print_info () {
-  ynh_print_log "[INFO] ${1}"
-}
-
-# Print a warning on stderr
-#
-# usage: ynh_print_warn "Text to print"
-# | arg: text - The text to print
-ynh_print_warn () {
-  ynh_print_log "[WARN] ${1}" >&2
-}
-
-# Print a error on stderr
-#
-# usage: ynh_print_err "Text to print"
-# | arg: text - The text to print
-ynh_print_err () {
-  ynh_print_log "[ERR] ${1}" >&2
-}
-
-# Execute a command and print the result as an error
-#
-# usage: ynh_exec_err command to execute
-# usage: ynh_exec_err "command to execute | following command"
-# In case of use of pipes, you have to use double quotes. Otherwise, this helper will be executed with the first command, then be send to the next pipe.
-#
-# | arg: command - command to execute
-ynh_exec_err () {
-	ynh_print_err "$(eval $@)"
-}
-
-# Execute a command and print the result as a warning
-#
-# usage: ynh_exec_warn command to execute
-# usage: ynh_exec_warn "command to execute | following command"
-# In case of use of pipes, you have to use double quotes. Otherwise, this helper will be executed with the first command, then be send to the next pipe.
-#
-# | arg: command - command to execute
-ynh_exec_warn () {
-	ynh_print_warn "$(eval $@)"
-}
-
-# Execute a command and force the result to be printed on stdout
-#
-# usage: ynh_exec_warn_less command to execute
-# usage: ynh_exec_warn_less "command to execute | following command"
-# In case of use of pipes, you have to use double quotes. Otherwise, this helper will be executed with the first command, then be send to the next pipe.
-#
-# | arg: command - command to execute
-ynh_exec_warn_less () {
-	eval $@ 2>&1
-}
-
-# Execute a command and redirect stdout in /dev/null
-#
-# usage: ynh_exec_quiet command to execute
-# usage: ynh_exec_quiet "command to execute | following command"
-# In case of use of pipes, you have to use double quotes. Otherwise, this helper will be executed with the first command, then be send to the next pipe.
-#
-# | arg: command - command to execute
-ynh_exec_quiet () {
-	eval $@ > /dev/null
-}
-
-# Execute a command and redirect stdout and stderr in /dev/null
-#
-# usage: ynh_exec_fully_quiet command to execute
-# usage: ynh_exec_fully_quiet "command to execute | following command"
-# In case of use of pipes, you have to use double quotes. Otherwise, this helper will be executed with the first command, then be send to the next pipe.
-#
-# | arg: command - command to execute
-ynh_exec_fully_quiet () {
-	eval $@ > /dev/null 2>&1
-}
-
-# Remove any logs for all the following commands.
-#
-# usage: ynh_print_OFF
-# WARNING: You should be careful with this helper, and never forgot to use ynh_print_ON as soon as possible to restore the logging.
-ynh_print_OFF () {
-	set +x
-}
-
-# Restore the logging after ynh_print_OFF
-#
-# usage: ynh_print_ON
-ynh_print_ON () {
-	set -x
-	# Print an echo only for the log, to be able to know that ynh_print_ON has been called.
-	echo ynh_print_ON > /dev/null
-}
-
-#=================================================
-
-# Install or update the main directory yunohost.multimedia
-#
-# usage: ynh_multimedia_build_main_dir
-ynh_multimedia_build_main_dir () {
-        local ynh_media_release="v1.0"
-        local checksum="4852c8607db820ad51f348da0dcf0c88"
-
-        # Download yunohost.multimedia scripts
-        wget -nv https://github.com/YunoHost-Apps/yunohost.multimedia/archive/${ynh_media_release}.tar.gz 
-
-        # Check the control sum
-        echo "${checksum} ${ynh_media_release}.tar.gz" | md5sum -c --status \
-                || ynh_die "Corrupt source"
-
-        # Extract
-        mkdir yunohost.multimedia-master
-        tar -xf ${ynh_media_release}.tar.gz -C yunohost.multimedia-master --strip-components 1
-        ./yunohost.multimedia-master/script/ynh_media_build.sh
-}
-
-# Add a directory in yunohost.multimedia
-# This "directory" will be a symbolic link to a existing directory.
-#
-# usage: ynh_multimedia_addfolder "Source directory" "Destination directory"
-#
-# | arg: -s, --source_dir= - Source directory - The real directory which contains your medias.
-# | arg: -d, --dest_dir= - Destination directory - The name and the place of the symbolic link, relative to "/home/yunohost.multimedia"
-ynh_multimedia_addfolder () {
-	# Declare an array to define the options of this helper.
-	declare -Ar args_array=( [s]=source_dir= [d]=dest_dir= )
-	local source_dir
-	local dest_dir
-	# Manage arguments with getopts
-	ynh_handle_getopts_args "$@"
-
-	./yunohost.multimedia-master/script/ynh_media_addfolder.sh --source="$source_dir" --dest="$dest_dir"
-}
-
-# Move a directory in yunohost.multimedia, and replace by a symbolic link
-#
-# usage: ynh_multimedia_movefolder "Source directory" "Destination directory"
-#
-# | arg: -s, --source_dir= - Source directory - The real directory which contains your medias.
-# It will be moved to "Destination directory"
-# A symbolic link will replace it.
-# | arg: -d, --dest_dir= - Destination directory - The new name and place of the directory, relative to "/home/yunohost.multimedia"
-ynh_multimedia_movefolder () {
-	# Declare an array to define the options of this helper.
-	declare -Ar args_array=( [s]=source_dir= [d]=dest_dir= )
-	local source_dir
-	local dest_dir
-	# Manage arguments with getopts
-	ynh_handle_getopts_args "$@"
-
-	./yunohost.multimedia-master/script/ynh_media_addfolder.sh --inv --source="$source_dir" --dest="$dest_dir"
-}
-
-# Allow an user to have an write authorisation in multimedia directories
-#
-# usage: ynh_multimedia_addaccess user_name
-#
-# | arg: -u, --user_name= - The name of the user which gain this access.
-ynh_multimedia_addaccess () {
-	# Declare an array to define the options of this helper.
-	declare -Ar args_array=( [u]=user_name=)
-	local user_name
-	# Manage arguments with getopts
-	ynh_handle_getopts_args "$@"
-
-	groupadd -f multimedia
-	usermod -a -G multimedia $user_name
-}
-
-#=================================================
-
-# Create a dedicated fail2ban config (jail and filter conf files)
-#
-# usage: ynh_add_fail2ban_config log_file filter [max_retry [ports]]
-# | arg: log_file - Log file to be checked by fail2ban
-# | arg: failregex - Failregex to be looked for by fail2ban
-# | arg: max_retry - Maximum number of retries allowed before banning IP address - default: 3
-# | arg: ports - Ports blocked for a banned IP address - default: http,https
-ynh_add_fail2ban_config () {
-   # Process parameters
-   logpath=$1
-   failregex=$2
-   max_retry=${3:-3}
-   ports=${4:-http,https}
-
-  test -n "$logpath" || ynh_die "ynh_add_fail2ban_config expects a logfile path as first argument and received nothing."
-  test -n "$failregex" || ynh_die "ynh_add_fail2ban_config expects a failure regex as second argument and received nothing."
-
-  finalfail2banjailconf="/etc/fail2ban/jail.d/$app.conf"
-  finalfail2banfilterconf="/etc/fail2ban/filter.d/$app.conf"
-  ynh_backup_if_checksum_is_different "$finalfail2banjailconf" 1
-  ynh_backup_if_checksum_is_different "$finalfail2banfilterconf" 1
-
-  sudo tee $finalfail2banjailconf <<EOF
-[$app]
-enabled = true
-port = $ports
-filter = $app
-logpath = $logpath
-maxretry = $max_retry
-EOF
-
-  sudo tee $finalfail2banfilterconf <<EOF
-[INCLUDES]
-before = common.conf
-[Definition]
-failregex = $failregex
-ignoreregex =
-EOF
-
-  ynh_store_file_checksum "$finalfail2banjailconf"
-  ynh_store_file_checksum "$finalfail2banfilterconf"
-
-  systemctl restart fail2ban
-  local fail2ban_error="$(journalctl -u fail2ban | tail -n50 | grep "WARNING.*$app.*")"
-  if [ -n "$fail2ban_error" ]
-  then
-    echo "[ERR] Fail2ban failed to load the jail for $app" >&2
-    echo "WARNING${fail2ban_error#*WARNING}" >&2
-  fi
-}
-
-# Remove the dedicated fail2ban config (jail and filter conf files)
-#
-# usage: ynh_remove_fail2ban_config
-ynh_remove_fail2ban_config () {
-  ynh_secure_remove "/etc/fail2ban/jail.d/$app.conf"
-  ynh_secure_remove "/etc/fail2ban/filter.d/$app.conf"
-  systemctl restart fail2ban
-}
-
-#=================================================
-
-# Read the value of a key in a ynh manifest file
-#
-# usage: ynh_read_manifest manifest key
-# | arg: manifest - Path of the manifest to read
-# | arg: key - Name of the key to find
-ynh_read_manifest () {
-	manifest="$1"
-	key="$2"
-	python3 -c "import sys, json;print(json.load(open('$manifest', encoding='utf-8'))['$key'])"
-}
-
-# Read the upstream version from the manifest
-# The version number in the manifest is defined by <upstreamversion>~ynh<packageversion>
-# For example : 4.3-2~ynh3
-# This include the number before ~ynh
-# In the last example it return 4.3-2
-#
-# usage: ynh_app_upstream_version
-ynh_app_upstream_version () {
-    manifest_path="../manifest.json"
-    if [ ! -e "$manifest_path" ]; then
-        manifest_path="../settings/manifest.json"	# Into the restore script, the manifest is not at the same place
-    fi
-    version_key=$(ynh_read_manifest "$manifest_path" "version")
-    echo "${version_key/~ynh*/}"
-}
-
-
-# Read package version from the manifest
-# The version number in the manifest is defined by <upstreamversion>~ynh<packageversion>
-# For example : 4.3-2~ynh3
-# This include the number after ~ynh
-# In the last example it return 3
-#
-# usage: ynh_app_package_version
-ynh_app_package_version () {
-    manifest_path="../manifest.json"
-    if [ ! -e "$manifest_path" ]; then
-        manifest_path="../settings/manifest.json"	# Into the restore script, the manifest is not at the same place
-    fi
-    version_key=$(ynh_read_manifest "$manifest_path" "version")
-    echo "${version_key/*~ynh/}"
-}
-
-# Checks the app version to upgrade with the existing app version and returns:
-# - UPGRADE_APP if the upstream app version has changed
-# - UPGRADE_PACKAGE if only the YunoHost package has changed
-#
-## It stops the current script without error if the package is up-to-date
-#
-# This helper should be used to avoid an upgrade of an app, or the upstream part
-# of it, when it's not needed
-#
-# To force an upgrade, even if the package is up to date,
-# you have to set the variable YNH_FORCE_UPGRADE before.
-# example: sudo YNH_FORCE_UPGRADE=1 yunohost app upgrade MyApp
-
-# usage: ynh_check_app_version_changed
-ynh_check_app_version_changed () {
-  local force_upgrade=${YNH_FORCE_UPGRADE:-0}
-  local package_check=${PACKAGE_CHECK_EXEC:-0}
-
-  # By default, upstream app version has changed
-  local return_value="UPGRADE_APP"
-
-  local current_version=$(ynh_read_manifest "/etc/yunohost/apps/$YNH_APP_INSTANCE_NAME/manifest.json" "version" || echo 1.0)
-  local current_upstream_version="${current_version/~ynh*/}"
-  local update_version=$(ynh_read_manifest "../manifest.json" "version" || echo 1.0)
-  local update_upstream_version="${update_version/~ynh*/}"
-
-  if [ "$current_version" == "$update_version" ] ; then
-      # Complete versions are the same
-      if [ "$force_upgrade" != "0" ]
-      then
-        echo "Upgrade forced by YNH_FORCE_UPGRADE." >&2
-        unset YNH_FORCE_UPGRADE
-      elif [ "$package_check" != "0" ]
-      then
-        echo "Upgrade forced for package check." >&2
-      else
-        ynh_die "Up-to-date, nothing to do" 0
-      fi
-  elif [ "$current_upstream_version" == "$update_upstream_version" ] ; then
-    # Upstream versions are the same, only YunoHost package versions differ
-    return_value="UPGRADE_PACKAGE"
-  fi
-  echo $return_value
-}
-
-#=================================================
-
 # Send an email to inform the administrator
 #
-# usage: ynh_send_readme_to_admin app_message [recipients]
-# | arg: -m --app_message= - The message to send to the administrator.
+# usage: ynh_send_readme_to_admin --app_message=app_message [--recipients=recipients] [--type=type]
+# | arg: -m --app_message= - The file with the content to send to the administrator.
 # | arg: -r, --recipients= - The recipients of this email. Use spaces to separate multiples recipients. - default: root
 #	example: "root admin@domain"
 #	If you give the name of a YunoHost user, ynh_send_readme_to_admin will find its email adress for you
 #	example: "root admin@domain user1 user2"
+# | arg: -t, --type= - Type of mail, could be 'backup', 'change_url', 'install', 'remove', 'restore', 'upgrade'
 ynh_send_readme_to_admin() {
 	# Declare an array to define the options of this helper.
-	declare -Ar args_array=( [m]=app_message= [r]=recipients= )
+	declare -Ar args_array=( [m]=app_message= [r]=recipients= [t]=type= )
 	local app_message
 	local recipients
+	local type
 	# Manage arguments with getopts
+
 	ynh_handle_getopts_args "$@"
-	local app_message="${app_message:-...No specific information...}"
-	local recipients="${recipients:-root}"
+	app_message="${app_message:-}"
+	recipients="${recipients:-root}"
+	type="${type:-install}"
+
+	# Get the value of admin_mail_html
+	admin_mail_html=$(ynh_app_setting_get $app admin_mail_html)
+	admin_mail_html="${admin_mail_html:-0}"
 
 	# Retrieve the email of users
 	find_mails () {
@@ -688,18 +344,75 @@ ynh_send_readme_to_admin() {
 	}
 	recipients=$(find_mails "$recipients")
 
-	local mail_subject="☁️🆈🅽🅷☁️: \`$app\` was just installed!"
+	# Subject base
+	local mail_subject="☁️🆈🅽🅷☁️: \`$app\`"
+
+	# Adapt the subject according to the type of mail required.
+	if [ "$type" = "backup" ]; then
+		mail_subject="$mail_subject has just been backup."
+	elif [ "$type" = "change_url" ]; then
+		mail_subject="$mail_subject has just been moved to a new URL!"
+	elif [ "$type" = "remove" ]; then
+		mail_subject="$mail_subject has just been removed!"
+	elif [ "$type" = "restore" ]; then
+		mail_subject="$mail_subject has just been restored!"
+	elif [ "$type" = "upgrade" ]; then
+		mail_subject="$mail_subject has just been upgraded!"
+	else	# install
+		mail_subject="$mail_subject has just been installed!"
+	fi
 
 	local mail_message="This is an automated message from your beloved YunoHost server.
 
 Specific information for the application $app.
 
-$app_message
+$(if [ -n "$app_message" ]
+then
+	cat "$app_message"
+else
+	echo "...No specific information..."
+fi)
 
 ---
 Automatic diagnosis data from YunoHost
 
-$(yunohost tools diagnosis | grep -B 100 "services:" | sed '/services:/d')"
+__PRE_TAG1__$(yunohost tools diagnosis | grep -B 100 "services:" | sed '/services:/d')__PRE_TAG2__"
+
+	# Store the message into a file for further modifications.
+	echo "$mail_message" > mail_to_send
+
+	# If a html email is required. Apply html tags to the message.
+ 	if [ "$admin_mail_html" -eq 1 ]
+ 	then
+		# Insert 'br' tags at each ending of lines.
+		ynh_replace_string "$" "<br>" mail_to_send
+
+		# Insert starting HTML tags
+		sed --in-place '1s@^@<!DOCTYPE html>\n<html>\n<head></head>\n<body>\n@' mail_to_send
+
+		# Keep tabulations
+		ynh_replace_string "  " "\&#160;\&#160;" mail_to_send
+		ynh_replace_string "\t" "\&#160;\&#160;" mail_to_send
+
+		# Insert url links tags
+		ynh_replace_string "__URL_TAG1__\(.*\)__URL_TAG2__\(.*\)__URL_TAG3__" "<a href=\"\2\">\1</a>" mail_to_send
+
+		# Insert pre tags
+		ynh_replace_string "__PRE_TAG1__" "<pre>" mail_to_send
+		ynh_replace_string "__PRE_TAG2__" "<\pre>" mail_to_send
+
+		# Insert finishing HTML tags
+		echo -e "\n</body>\n</html>" >> mail_to_send
+
+	# Otherwise, remove tags to keep a plain text.
+	else
+		# Remove URL tags
+		ynh_replace_string "__URL_TAG[1,3]__" "" mail_to_send
+		ynh_replace_string "__URL_TAG2__" ": " mail_to_send
+
+		# Remove PRE tags
+		ynh_replace_string "__PRE_TAG[1-2]__" "" mail_to_send
+	fi
 
 	# Define binary to use for mail command
 	if [ -e /usr/bin/bsd-mailx ]
@@ -709,8 +422,15 @@ $(yunohost tools diagnosis | grep -B 100 "services:" | sed '/services:/d')"
 		local mail_bin=/usr/bin/mail.mailutils
 	fi
 
+	if [ "$admin_mail_html" -eq 1 ]
+	then
+		content_type="text/html"
+	else
+		content_type="text/plain"
+	fi
+
 	# Send the email to the recipients
-	echo "$mail_message" | $mail_bin -a "Content-Type: text/plain; charset=UTF-8" -s "$mail_subject" "$recipients"
+	cat mail_to_send | $mail_bin -a "Content-Type: $content_type; charset=UTF-8" -s "$mail_subject" "$recipients"
 }
 
 #=================================================
@@ -731,43 +451,6 @@ ynh_system_reload () {
 
         # Reload, restart or start and print the log if the service fail to start or reload
         systemctl $action $service_name || ( journalctl --lines=20 -u $service_name >&2 && false)
-}
-
-#=================================================
-
-ynh_debian_release () {
-	lsb_release --codename --short
-}
-
-is_stretch () {
-	if [ "$(ynh_debian_release)" == "stretch" ]
-	then
-		return 0
-	else
-		return 1
-	fi
-}
-
-is_jessie () {
-	if [ "$(ynh_debian_release)" == "jessie" ]
-	then
-		return 0
-	else
-		return 1
-	fi
-}
-
-#=================================================
-
-# Delete a file checksum from the app settings
-#
-# $app should be defined when calling this helper
-#
-# usage: ynh_remove_file_checksum file
-# | arg: file - The file for which the checksum will be deleted
-ynh_delete_file_checksum () {
-	local checksum_setting_name=checksum_${1//[\/ ]/_}	# Replace all '/' and ' ' by '_'
-	ynh_app_setting_delete $app $checksum_setting_name
 }
 
 #=================================================

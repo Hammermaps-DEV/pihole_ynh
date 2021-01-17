@@ -1,7 +1,0 @@
-SOURCE_URL=https://github.com/liberodark/pihole_ynh/releases/download/2019.02.07/cloudflared-stable-linux-amd64.deb
-SOURCE_SUM=e1de63bca4508e20f25702229a72d440aa7c26b93acb38f0e6fff50da99f8d020bb6e6c2d01608fe9bcfa9b91177a3a543e0b1ca7407c94cfca8fbf8310d424c
-SOURCE_SUM_PRG=sha512sum
-SOURCE_FORMAT=deb
-SOURCE_IN_SUBDIR=false
-SOURCE_EXTRACT=FALSE
-SOURCE_FILENAME=cloudflared-stable-linux-amd64.deb
