@@ -383,13 +383,13 @@ cp -a ../conf/dnsmasq.conf /etc/dnsmasq.conf
 if [ $enable_dhcp -eq 1 ]
 then
 	dhcp_alert="You asked to use the internal DHCP server of dnsmasq with PiHole.
-You should really read the documentation about that, https://github.com/YunoHost-Apps/pihole_ynh/blob/master/dhcp.md
+You should really read the documentation about that, https://github.com/Hammermaps-DEV/pihole_ynh/blob/master/dhcp.md
 
 "
 else
 	dhcp_alert=""
 fi
 
-message="${dhcp_alert}If you facing an issue or want to improve this app, please open a new issue in this project: https://github.com/YunoHost-Apps/pihole_ynh"
+message="${dhcp_alert}If you facing an issue or want to improve this app, please open a new issue in this project: https://github.com/Hammermaps-DEV/pihole_ynh"
 
 ynh_send_readme_to_admin --app_message="$message" --recipients="$admin"

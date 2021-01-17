@@ -6,5 +6,5 @@ app_depencencies="bc cron curl dnsutils iputils-ping lsof netcat psmisc sudo unz
 if [ "$(lsb_release --codename --short)" != "jessie" ]; then
 	app_depencencies="$app_depencencies php-sqlite3"
 else
-	app_depencencies="$app_depencencies php5-sqlite"
+	app_depencencies="$app_depencencies php7.3-sqlite"
 fi
