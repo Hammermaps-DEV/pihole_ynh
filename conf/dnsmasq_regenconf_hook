@@ -31,7 +31,7 @@ do_post_regen() {
   test -n $temp_dir && rm -r $temp_dir
 
   # Commente le cache-size de la config par défaut
-  sed --in-place "s/^cache-size=/#pihole# cache-size=/g" /etc/dnsmasq.conf
+  #sed --in-place "s/^cache-size=/#pihole# cache-size=/g" /etc/dnsmasq.conf
 
   # Reload dnsmasq
   systemctl reload dnsmasq
