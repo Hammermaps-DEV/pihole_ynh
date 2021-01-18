@@ -55,6 +55,9 @@ chown $app -R "$pihole_storage"
 pihole_dir="/opt/pihole"
 mkdir -p "$pihole_dir"
 
+mkdir -p "/var/www/pihole"
+chown $app -R "/var/www/pihole"
+
 #=================================================
 # STORE SETTINGS FROM MANIFEST
 #=================================================
@@ -114,14 +117,6 @@ ynh_script_progression --message="Configuring nginx web server..."
 
 # Create a dedicated nginx config
 ynh_add_nginx_config
-
-#=================================================
-# CREATE DEDICATED USER
-#=================================================
-ynh_script_progression --message="Configuring system user..."
-
-# Create a system user
-ynh_system_user_create --username=$app
 
 #=================================================
 # PHP-FPM CONFIGURATION
