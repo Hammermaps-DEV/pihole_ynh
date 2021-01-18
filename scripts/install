@@ -42,7 +42,7 @@ ynh_webpath_register --app=$app --domain=$domain --path_url=$path_url
 
 pihole_storage="/etc/pihole"
 mkdir -p "$pihole_storage"
-chown $app: -R "$pihole_storage"
+chown $app -R "$pihole_storage"
 
 pihole_dir="/opt/pihole"
 mkdir -p "$pihole_dir"
